@@ -20,7 +20,7 @@ def format_rp(angka):
 
 try:
     from model import Transaksi
-    from manajer_anggaran import AnggaranHarian
+    from manager_anggaran import AnggaranHarian
     from konfigurasi import KATEGORI_PENGELUARAN
 except ImportError as e:
     st.error(f"Gagal mengimpor modul: {e}. Pastikan file .py lain ada.")
@@ -28,7 +28,6 @@ except ImportError as e:
 
 st.set_page_config(page_title="Catatan Pengeluaran", layout="wide", initial_sidebar_state="expanded")
 
-# --- Inisialisasi Pengelola Anggaran (Gunakan Cache) ---
 @st.cache_resource
 def get_anggaran_manager():
     print(">>> STREAMLIT: (Cache Resource) Menginisialisasi AnggaranHarian...")
@@ -36,7 +35,7 @@ def get_anggaran_manager():
 
 anggaran = get_anggaran_manager()
 
-# --- Fungsi Halaman/UI ---
+# --- Halaman Tambah ---
 def halaman_input(anggaran: AnggaranHarian):
     st.header("Tambah Pengeluaran Baru")
     with st.form("form_transaksi_baru", clear_on_submit=True):
@@ -53,19 +52,20 @@ def halaman_input(anggaran: AnggaranHarian):
         submitted = st.form_submit_button("Simpan Transaksi")
         if submitted:
             if not deskripsi:
-                st.warning("Deskripsi wajib!", icon=" ")
+                st.warning("Deskripsi wajib!", icon="⚠️")
             elif jumlah is None or jumlah <= 0:
-                st.warning("Jumlah wajib!", icon=" ")
+                st.warning("Jumlah wajib!", icon="⚠️")
             else:
                 with st.spinner("Menyimpan..."):
                     tx = Transaksi(deskripsi, float(jumlah), kategori, tanggal)
                     if anggaran.tambah_transaksi(tx):
-                        st.success("OK! Simpan.", icon=" ")
+                        st.success("OK! Simpan.", icon="✅")
                         st.cache_data.clear()
                         st.rerun()
                     else:
-                        st.error("Gagal simpan.", icon=" ")
+                        st.error("Gagal simpan.", icon="❌")
 
+# --- Halaman Riwayat ---
 def halaman_riwayat(anggaran: AnggaranHarian):
     st.subheader("Detail Semua Transaksi")
     if st.button("Refresh Riwayat"):
@@ -74,12 +74,13 @@ def halaman_riwayat(anggaran: AnggaranHarian):
     with st.spinner("Memuat riwayat..."):
         df_transaksi = anggaran.get_dataframe_transaksi()
     if df_transaksi is None:
-        st.error("Gagal ambil riwayat.")
+        st.error("Gagal ambil riwayat.", icon="❌")
     elif df_transaksi.empty:
         st.info("Belum ada transaksi.")
     else:
         st.dataframe(df_transaksi, use_container_width=True, hide_index=True)
 
+# --- Halaman Ringkasan ---
 def halaman_ringkasan(anggaran: AnggaranHarian):
     st.subheader("Ringkasan Pengeluaran")
     col_filter1, col_filter2 = st.columns([1, 2])
@@ -130,23 +131,25 @@ def halaman_ringkasan(anggaran: AnggaranHarian):
                 st.write("Grafik:")
                 st.bar_chart(df_kategori.set_index('Kategori')['Total'], use_container_width=True)
         except Exception as e:
-            st.error(f"Gagal tampilkan ringkasan: {e}")
+            st.error(f"Gagal tampilkan ringkasan: {e}", icon="❌")
 
-# --- Fungsi Utama Aplikasi Streamlit ---
+# --- Fungsi Utama ---
 def main():
     st.sidebar.title("Catatan Pengeluaran")
     menu_pilihan = st.sidebar.radio("Pilih Menu:", ["Tambah", "Riwayat", "Ringkasan"], key="menu_utama")
     st.sidebar.markdown("---")
     st.sidebar.info("Jobsheet - Aplikasi Keuangan")
     manajer_anggaran = get_anggaran_manager()
+    
     if menu_pilihan == "Tambah":
         halaman_input(manajer_anggaran)
     elif menu_pilihan == "Riwayat":
         halaman_riwayat(manajer_anggaran)
     elif menu_pilihan == "Ringkasan":
         halaman_ringkasan(manajer_anggaran)
+
     st.markdown("---")
     st.caption("Pengembangan Aplikasi Berbasis OOP")
 
 if __name__ == "__main__":
-    main()  # Jalankan fungsi utama
+    main()
