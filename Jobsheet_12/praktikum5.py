@@ -1,14 +1,15 @@
-# !pip install folium pandas # jalankan kode ini jika Folium dan Pandas belum ada
+# !pip install folium pandas # jalankan ini jika belum menginstal
 import pandas as pd
 import folium
 from abc import ABC, abstractmethod
 
-# --- Definisi Kelas (Salin dari Praktikum 3/4) ---
+# --- Kelas Abstrak dan Turunannya ---
 class Lokasi(ABC):
     def __init__(self, nama: str, latitude: float, longitude: float):
         self.nama = str(nama) if nama else "Tanpa Nama"
         try:
-            self.latitude, self.longitude = float(latitude), float(longitude)
+            self.latitude = float(latitude)
+            self.longitude = float(longitude)
         except ValueError:
             self.latitude, self.longitude = 0.0, 0.0
 
@@ -51,11 +52,11 @@ class TempatIbadah(Lokasi):
     def get_info_popup(self) -> str:
         return f"<h4><b>{self.nama}</b></h4><i>Tempat Ibadah ({self.agama})</i><br><br>{self.deskripsi}<br><br>Koordinat: ({self.latitude:.4f}, {self.longitude:.4f})"
 
-# --- Fungsi baca data dan buat objek (Salin dari Praktikum 4) ---
+# --- Fungsi Membaca dan Mengubah Data ---
 def baca_data_lokasi(nama_file: str) -> pd.DataFrame | None:
     try:
-        dataframe = pd.read_csv(nama_file)
-        return dataframe
+        df = pd.read_csv(nama_file)
+        return df
     except FileNotFoundError:
         print(f"ERROR: File '{nama_file}' tidak ditemukan!")
         return None
@@ -72,20 +73,20 @@ def buat_objek_lokasi_dari_df(dataframe: pd.DataFrame) -> list:
         nama = row.get('Nama', None)
         lat = row.get('Latitude', None)
         lon = row.get('Longitude', None)
-        tipe = row.get('Tipe', 'Lainnya')
-        deskripsi = row.get('Deskripsi', '')
+        tipe = str(row.get('Tipe', 'Lainnya')).strip()
+        deskripsi = str(row.get('Deskripsi', '')).strip()
         objek = None
 
-        if nama is None or lat is None or lon is None:
+        if nama is None or pd.isna(lat) or pd.isna(lon):
             continue
+
         try:
             if 'Wisata' in tipe or tipe == 'Landmark':
                 objek = TempatWisata(nama, lat, lon, tipe, deskripsi)
             elif tipe == 'Kuliner':
                 objek = Kuliner(nama, lat, lon, deskripsi)
             elif 'Ibadah' in tipe:
-                agama_info = "Umum"
-                objek = TempatIbadah(nama, lat, lon, agama_info, deskripsi)
+                objek = TempatIbadah(nama, lat, lon, "Umum", deskripsi)
 
             if objek:
                 list_objek_lokasi.append(objek)
@@ -94,16 +95,8 @@ def buat_objek_lokasi_dari_df(dataframe: pd.DataFrame) -> list:
 
     return list_objek_lokasi
 
-# --- Fungsi Inti Praktikum Ini ---
+# --- Fungsi Pembuatan Peta ---
 def buat_peta_lokasi_folium(list_objek: list, file_output: str = "peta_lokasi.html"):
-    """
-    Membuat peta Folium interaktif dengan marker untuk setiap objek
-    dalam list_objek.
-
-    Args:
-        list_objek (list): List berisi instance objek turunan Lokasi.
-        file_output (str): Nama file HTML untuk menyimpan peta.
-    """
     if not list_objek:
         print("Tidak ada objek lokasi untuk dipetakan.")
         return
@@ -114,7 +107,7 @@ def buat_peta_lokasi_folium(list_objek: list, file_output: str = "peta_lokasi.ht
         lat_tengah = list_objek[0].latitude
         lon_tengah = list_objek[0].longitude
     except IndexError:
-        lat_tengah, lon_tengah = -6.9929, 110.4200  # Default Semarang jika list kosong
+        lat_tengah, lon_tengah = -6.9929, 110.4200  # fallback ke Semarang
 
     peta = folium.Map(location=[lat_tengah, lon_tengah], zoom_start=13, tiles="OpenStreetMap")
     print(f" -> Objek peta dibuat, berpusat di ({lat_tengah:.4f}, {lon_tengah:.4f})")
@@ -141,7 +134,7 @@ def buat_peta_lokasi_folium(list_objek: list, file_output: str = "peta_lokasi.ht
     except Exception as e:
         print(f"\nERROR saat menyimpan peta Folium: {type(e).__name__} - {e}")
 
-# --- Kode Utama ---
+# --- Program Utama ---
 if __name__ == "__main__":
     NAMA_FILE_CSV = "lokasi_semarang.csv"
     NAMA_FILE_PETA = "peta_interaktif_semarang.html"
