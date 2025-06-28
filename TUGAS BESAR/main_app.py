@@ -5,7 +5,7 @@ import pandas as pd
 try:
     from model import Mahasiswa, MataKuliah, Nilai
     from management_nilai import ManajemenNilaiMahasiswa
-    from konfigurasi import MATA_KULIAH
+    from konfigurasi import MATA_KULIAH_PER_SEMESTER
 except ImportError as e:
     st.error(f"Gagal mengimpor modul: {e}. Pastikan file .py lain ada.")
     st.stop()
@@ -18,71 +18,85 @@ def get_manager():
 
 manager = get_manager()
 
-# ---------------------- Halaman Input Nilai ----------------------
-def halaman_input_nilai(manager: ManajemenNilaiMahasiswa):
-    st.header("Input Nilai Mahasiswa")
-    daftar_mahasiswa = manager.get_semua_mahasiswa()
-    daftar_mk = manager.get_semua_mk()
+def halaman_input_mahasiswa(manager: ManajemenNilaiMahasiswa):
+    st.header("📥 Input Mahasiswa")
+    with st.form("form_mahasiswa", clear_on_submit=True):
+        nim = st.text_input("NIM")
+        nama = st.text_input("Nama Lengkap")
+        jurusan = st.text_input("Jurusan")
+        semester = st.selectbox("Semester", list(range(1, 9)))
+        submitted = st.form_submit_button("Simpan Mahasiswa")
 
-    if not daftar_mahasiswa or not daftar_mk:
-        st.warning("Pastikan data mahasiswa dan mata kuliah sudah diinput.")
-        return
-
-    nim_list = [f"{mhs.nim} - {mhs.nama}" for mhs in daftar_mahasiswa]
-    mk_list = [f"{mk.kode_mk} - {mk.nama_mk}" for mk in daftar_mk]
-
-    with st.form("form_nilai", clear_on_submit=True):
-        nim_pilihan = st.selectbox("Pilih Mahasiswa:", nim_list)
-        mk_pilihan = st.selectbox("Pilih Mata Kuliah:", mk_list)
-        nilai = st.number_input("Nilai Angka:", min_value=0.0, max_value=100.0)
-        submitted = st.form_submit_button("Simpan Nilai")
         if submitted:
-            nim = nim_pilihan.split(" - ")[0]
-            kode_mk = mk_pilihan.split(" - ")[0]
-            nilai_obj = Nilai(nim=nim, kode_mk=kode_mk, nilai_angka=nilai)
-            if manager.tambah_nilai(nilai_obj):
-                st.success("Nilai berhasil disimpan.")
+            if not nim or not nama or not jurusan:
+                st.warning("Mohon lengkapi semua data mahasiswa.")
             else:
-                st.error("Gagal menyimpan nilai.")
+                mahasiswa = Mahasiswa(nim=nim, nama=nama, jurusan=jurusan, semester=semester)
+                if manager.tambah_mahasiswa(mahasiswa):
+                    st.success("✅ Mahasiswa berhasil disimpan.")
+                else:
+                    st.error("❌ Gagal menyimpan data mahasiswa.")
 
-# ---------------------- Halaman Riwayat ----------------------
-def halaman_riwayat_nilai(manager: ManajemenNilaiMahasiswa):
-    st.header("Riwayat Nilai Mahasiswa")
+def halaman_input_nilai(manager: ManajemenNilaiMahasiswa):
+    st.header("🎓 Input Nilai Mahasiswa")
+
     daftar_mahasiswa = manager.get_semua_mahasiswa()
     if not daftar_mahasiswa:
         st.warning("Belum ada data mahasiswa.")
         return
 
-    nim_pilihan = st.selectbox("Pilih Mahasiswa:", [f"{m.nim} - {m.nama}" for m in daftar_mahasiswa])
-    nim = nim_pilihan.split(" - ")[0]
-    df = manager.get_dataframe_nilai(nim)
+    mahasiswa_pilihan = st.selectbox("Pilih Mahasiswa:", [f"{m.nim} - {m.nama}" for m in daftar_mahasiswa])
+    nim = mahasiswa_pilihan.split(" - ")[0]
+
+    semester_dipilih = st.selectbox("Pilih Semester:", list(MATA_KULIAH_PER_SEMESTER.keys()))
+    matkul_list = MATA_KULIAH_PER_SEMESTER.get(semester_dipilih, [])
+
+    if not matkul_list:
+        st.warning("Belum ada mata kuliah untuk semester ini.")
+        return
+
+    matkul_pilihan = st.selectbox("Pilih Mata Kuliah:", matkul_list)
+    nilai_angka = st.number_input("Nilai Angka:", min_value=0.0, max_value=100.0)
+
+    if st.button("Simpan Nilai"):
+        kode_mk = matkul_pilihan.replace(" ", "_").lower()
+        nilai = Nilai(nim=nim, kode_mk=kode_mk, nilai_angka=nilai_angka)
+        if manager.tambah_nilai(nilai):
+            st.success("✅ Nilai berhasil disimpan.")
+        else:
+            st.error("❌ Gagal menyimpan nilai.")
+
+def halaman_riwayat(manager: ManajemenNilaiMahasiswa):
+    st.header("📋 Riwayat Nilai Mahasiswa")
+    df = manager.get_dataframe_nilai()
     if df.empty:
-        st.info("Belum ada nilai untuk mahasiswa ini.")
+        st.info("Belum ada data nilai.")
     else:
         st.dataframe(df, use_container_width=True)
 
-# ---------------------- Halaman IPK ----------------------
 def halaman_ipk(manager: ManajemenNilaiMahasiswa):
-    st.header("Perhitungan IPK Mahasiswa")
+    st.header("📊 Hitung Rata-rata Nilai Mahasiswa")
     daftar_mahasiswa = manager.get_semua_mahasiswa()
     if not daftar_mahasiswa:
         st.warning("Belum ada data mahasiswa.")
         return
 
-    nim_pilihan = st.selectbox("Pilih Mahasiswa:", [f"{m.nim} - {m.nama}" for m in daftar_mahasiswa])
-    nim = nim_pilihan.split(" - ")[0]
-    ipk = manager.hitung_ipk(nim)
-    st.metric("IPK Saat Ini", value=ipk)
+    mahasiswa_pilihan = st.selectbox("Pilih Mahasiswa:", [f"{m.nim} - {m.nama}" for m in daftar_mahasiswa])
+    nim = mahasiswa_pilihan.split(" - ")[0]
 
-# ---------------------- Menu Utama ----------------------
+    ipk = manager.hitung_rata_rata(nim)
+    st.metric(label="Rata-rata Nilai", value=f"{ipk:.2f}")
+
 def main():
-    st.sidebar.title("📚 Menu Aplikasi Nilai")
-    menu = st.sidebar.radio("Navigasi:", ["Input Nilai", "Riwayat Nilai", "Hitung IPK"])
+    st.sidebar.title("📚 Manajemen Nilai Mahasiswa")
+    menu = st.sidebar.radio("Menu:", ["Input Mahasiswa", "Input Nilai", "Riwayat Nilai", "Hitung IPK"])
 
-    if menu == "Input Nilai":
+    if menu == "Input Mahasiswa":
+        halaman_input_mahasiswa(manager)
+    elif menu == "Input Nilai":
         halaman_input_nilai(manager)
     elif menu == "Riwayat Nilai":
-        halaman_riwayat_nilai(manager)
+        halaman_riwayat(manager)
     elif menu == "Hitung IPK":
         halaman_ipk(manager)
 
