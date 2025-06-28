@@ -75,7 +75,7 @@ class ManajemenNilaiMahasiswa:
     
     
     def get_matkul_by_semester(self, semester: int) -> list[MataKuliah]:
-        sql = "SELECT kode_mk, nama_mk, sks, semester FROM mata_kuliah WHERE semester = ?"
+        sql = "SELECT kode_mk, nama_mk, semester FROM mata_kuliah WHERE semester = ?"
         rows = database.fetch_query(sql, (semester,))
-        return [MataKuliah(kode_mk=r["kode_mk"], nama_mk=r["nama_mk"], sks=r["sks"], semester=r["semester"]) for r in rows] if rows else []
+        return [MataKuliah(kode_mk=r["kode_mk"], nama_mk=r["nama_mk"], semester=r["semester"]) for r in rows] if rows else []
 

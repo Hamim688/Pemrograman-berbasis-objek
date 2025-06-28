@@ -77,12 +77,13 @@ def halaman_riwayat(manager: ManajemenNilaiMahasiswa):
 
     mahasiswa_pilihan = st.selectbox("Pilih Mahasiswa:", [f"{m.nim} - {m.nama}" for m in daftar_mahasiswa])
     nim = mahasiswa_pilihan.split(" - ")[0]
+
     df = manager.get_dataframe_nilai(nim)
-    
     if df.empty:
-        st.info("Belum ada data nilai untuk mahasiswa ini.")
+        st.info("Belum ada data nilai.")
     else:
         st.dataframe(df, use_container_width=True)
+
 
 
 def halaman_ipk(manager: ManajemenNilaiMahasiswa):
