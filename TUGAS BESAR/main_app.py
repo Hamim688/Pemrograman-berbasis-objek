@@ -96,7 +96,7 @@ def halaman_ipk(manager: ManajemenNilaiMahasiswa):
     mahasiswa_pilihan = st.selectbox("Pilih Mahasiswa:", [f"{m.nim} - {m.nama}" for m in daftar_mahasiswa])
     nim = mahasiswa_pilihan.split(" - ")[0]
 
-    ipk = manager.hitung_rata_rata(nim)
+    ipk = manager.hitung_ipk(nim)
     st.metric(label="Rata-rata Nilai", value=f"{ipk:.2f}")
 
 def main():
