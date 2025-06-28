@@ -15,7 +15,6 @@ def setup_database():
             nim TEXT PRIMARY KEY,
             nama TEXT NOT NULL,
             jurusan TEXT NOT NULL,
-            prodi TEXT NOT NULL,
             semester INTEGER NOT NULL
         );
         """

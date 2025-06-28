@@ -60,6 +60,8 @@ def halaman_input_nilai(manager: ManajemenNilaiMahasiswa):
 
     if st.button("Simpan Nilai"):
         kode_mk = matkul_pilihan.replace(" ", "_").lower()
+        mk_obj = MataKuliah(kode_mk=kode_mk, nama_mk=matkul_pilihan)
+        manager.tambah_mata_kuliah(mk_obj)
         nilai = Nilai(nim=nim, kode_mk=kode_mk, nilai_angka=nilai_angka)
         if manager.tambah_nilai(nilai):
             st.success("✅ Nilai berhasil disimpan.")
@@ -68,11 +70,20 @@ def halaman_input_nilai(manager: ManajemenNilaiMahasiswa):
 
 def halaman_riwayat(manager: ManajemenNilaiMahasiswa):
     st.header("📋 Riwayat Nilai Mahasiswa")
-    df = manager.get_dataframe_nilai()
+    daftar_mahasiswa = manager.get_semua_mahasiswa()
+    if not daftar_mahasiswa:
+        st.warning("Belum ada data mahasiswa.")
+        return
+
+    mahasiswa_pilihan = st.selectbox("Pilih Mahasiswa:", [f"{m.nim} - {m.nama}" for m in daftar_mahasiswa])
+    nim = mahasiswa_pilihan.split(" - ")[0]
+    df = manager.get_dataframe_nilai(nim)
+    
     if df.empty:
-        st.info("Belum ada data nilai.")
+        st.info("Belum ada data nilai untuk mahasiswa ini.")
     else:
         st.dataframe(df, use_container_width=True)
+
 
 def halaman_ipk(manager: ManajemenNilaiMahasiswa):
     st.header("📊 Hitung Rata-rata Nilai Mahasiswa")
