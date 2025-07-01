@@ -2,10 +2,9 @@
 class Mahasiswa:
     """Merepresentasikan data mahasiswa."""
     
-    def __init__(self, nim: str, nama: str, jurusan: str, semester: int):
+    def __init__(self, nim: str, nama: str, semester: int):
         self.nim = nim.strip().upper()
         self.nama = nama.strip().title()
-        self.jurusan = jurusan.strip().title()
         try:
             self.semester = int(semester)
             if self.semester <= 0:
@@ -16,13 +15,12 @@ class Mahasiswa:
             self.semester = 1
 
     def __repr__(self) -> str:
-        return f"Mahasiswa(NIM:{self.nim}, Nama:{self.nama}, Jurusan:{self.jurusan}, Semester:{self.semester})"
+        return f"Mahasiswa(NIM:{self.nim}, Nama:{self.nama}, Semester:{self.semester})"
 
     def to_dict(self) -> dict:
         return {
             "nim": self.nim,
             "nama": self.nama,
-            "jurusan": self.jurusan,
             "semester": self.semester
         }
 
@@ -61,23 +59,36 @@ class Nilai:
             self.nilai_angka = 0.0
 
     def nilai_huruf(self) -> str:
+        """Mengembalikan nilai huruf berdasarkan rentang nilai angka."""
         n = self.nilai_angka
-        if n >= 85: return "A"
-        elif n >= 75: return "B"
-        elif n >= 65: return "C"
-        elif n >= 50: return "D"
-        else: return "E"
+        if n >= 85.00:
+            return "A"
+        elif n >= 77.50:
+            return "AB"
+        elif n >= 70.00:
+            return "B"
+        elif n >= 62.50:
+            return "BC"
+        elif n >= 55.00:
+            return "C"
+        elif n >= 40.00:
+            return "D"
+        else:
+            return "E"
 
     def bobot(self) -> float:
+        """Mengembalikan bobot nilai berdasarkan nilai huruf."""
         huruf = self.nilai_huruf()
         return {
             "A": 4.0,
+            "AB": 3.5,
             "B": 3.0,
+            "BC": 2.5,
             "C": 2.0,
             "D": 1.0,
             "E": 0.0
         }.get(huruf, 0.0)
-
+    
     def __repr__(self) -> str:
         return f"Nilai(ID:{self.id_nilai}, NIM:{self.nim}, MK:{self.kode_mk}, Nilai:{self.nilai_angka}, Huruf:{self.nilai_huruf()})"
 

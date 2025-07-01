@@ -30,7 +30,7 @@ def execute_query(query: str, params: tuple = None):
         return last_id
     except sqlite3.Error as e :
         print(f"ERROR [database.py] Query gagal: {e} | Query: {query[:60]}")
-        conn.rollback
+        conn.rollback()
         return None
     finally:
         if conn:
@@ -84,7 +84,6 @@ def setup_database_initial():
         CREATE TABLE IF NOT EXISTS mahasiswa (
             nim TEXT PRIMARY KEY,
             nama TEXT NOT NULL,
-            jurusan TEXT NOT NULL,
             semester INTEGER NOT NULL
         );
         """

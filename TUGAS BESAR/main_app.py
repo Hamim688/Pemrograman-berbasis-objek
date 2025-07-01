@@ -1,4 +1,3 @@
-# main_app.py
 import streamlit as st
 import pandas as pd
 
@@ -10,33 +9,36 @@ except ImportError as e:
     st.error(f"Gagal mengimpor modul: {e}. Pastikan file .py lain ada.")
     st.stop()
 
-st.set_page_config(page_title="Manajemen Nilai Mahasiswa", layout="wide")
+# Setting konfigurasi Streamlit
+st.set_page_config(page_title="Manajemen Nilai Mahasiswa TRK", layout="wide")
 
+# Mengambil Manajer Nilai
 @st.cache_resource
 def get_manager():
     return ManajemenNilaiMahasiswa()
 
 manager = get_manager()
 
+# Halaman Input Mahasiswa
 def halaman_input_mahasiswa(manager: ManajemenNilaiMahasiswa):
     st.header("📥 Input Mahasiswa")
     with st.form("form_mahasiswa", clear_on_submit=True):
         nim = st.text_input("NIM")
         nama = st.text_input("Nama Lengkap")
-        jurusan = st.text_input("Jurusan")
         semester = st.selectbox("Semester", list(range(1, 9)))
         submitted = st.form_submit_button("Simpan Mahasiswa")
 
         if submitted:
-            if not nim or not nama or not jurusan:
+            if not nim or not nama:
                 st.warning("Mohon lengkapi semua data mahasiswa.")
             else:
-                mahasiswa = Mahasiswa(nim=nim, nama=nama, jurusan=jurusan, semester=semester)
+                mahasiswa = Mahasiswa(nim=nim, nama=nama, semester=semester)
                 if manager.tambah_mahasiswa(mahasiswa):
                     st.success("✅ Mahasiswa berhasil disimpan.")
                 else:
                     st.error("❌ Gagal menyimpan data mahasiswa.")
 
+# Halaman Input Nilai Mahasiswa
 def halaman_input_nilai(manager: ManajemenNilaiMahasiswa):
     st.header("🎓 Input Nilai Mahasiswa")
 
@@ -68,6 +70,7 @@ def halaman_input_nilai(manager: ManajemenNilaiMahasiswa):
         else:
             st.error("❌ Gagal menyimpan nilai.")
 
+# Halaman Riwayat Nilai Mahasiswa
 def halaman_riwayat(manager: ManajemenNilaiMahasiswa):
     st.header("📋 Riwayat Nilai Mahasiswa")
     daftar_mahasiswa = manager.get_semua_mahasiswa()
@@ -84,8 +87,7 @@ def halaman_riwayat(manager: ManajemenNilaiMahasiswa):
     else:
         st.dataframe(df, use_container_width=True)
 
-
-
+# Halaman Hitung IPK Mahasiswa
 def halaman_ipk(manager: ManajemenNilaiMahasiswa):
     st.header("📊 Hitung Rata-rata Nilai Mahasiswa")
     daftar_mahasiswa = manager.get_semua_mahasiswa()
@@ -99,8 +101,9 @@ def halaman_ipk(manager: ManajemenNilaiMahasiswa):
     ipk = manager.hitung_ipk(nim)
     st.metric(label="Rata-rata Nilai", value=f"{ipk:.2f}")
 
+# Fungsi utama aplikasi
 def main():
-    st.sidebar.title("📚 Manajemen Nilai Mahasiswa")
+    st.sidebar.title("📚 Manajemen Nilai Mahasiswa TRK")
     menu = st.sidebar.radio("Menu:", ["Input Mahasiswa", "Input Nilai", "Riwayat Nilai", "Hitung IPK"])
 
     if menu == "Input Mahasiswa":

@@ -14,17 +14,3 @@ MATA_KULIAH_PER_SEMESTER = {
     7: ["Virtual System & Services", "Integrative Programming", "Special Topic in Industrial Informatic", "Automasi Industri", "Tugas Akhir"],
     8: ["MAGANG"]
 }
-SKALA_NILAI = {
-    "A": (85, 100),
-    "B": (75, 84),
-    "C": (65, 74),
-    "D": (50, 64),
-    "E": (0, 49)
-}
-BOBOT_NILAI = {
-    "A": 4.0,
-    "B": 3.0,
-    "C": 2.0,
-    "D": 1.0,
-    "E": 0.0
-}

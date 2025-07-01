@@ -20,8 +20,8 @@ class ManajemenNilaiMahasiswa:
     # -- Mahasiswa --
     def tambah_mahasiswa(self, mhs: Mahasiswa) -> bool:
         if not isinstance(mhs, Mahasiswa): return False
-        sql = "INSERT INTO mahasiswa (nim, nama, jurusan, semester) VALUES (?, ?, ?, ?)"
-        params = (mhs.nim, mhs.nama, mhs.jurusan, mhs.semester)
+        sql = "INSERT INTO mahasiswa (nim, nama, semester) VALUES (?, ?, ?)"
+        params = (mhs.nim, mhs.nama, mhs.semester)
         return database.execute_query(sql, params) is not None
 
     def get_semua_mahasiswa(self) -> list[Mahasiswa]:

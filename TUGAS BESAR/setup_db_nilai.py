@@ -14,7 +14,6 @@ def setup_database():
         CREATE TABLE IF NOT EXISTS mahasiswa (
             nim TEXT PRIMARY KEY,
             nama TEXT NOT NULL,
-            jurusan TEXT NOT NULL,
             semester INTEGER NOT NULL
         );
         """
